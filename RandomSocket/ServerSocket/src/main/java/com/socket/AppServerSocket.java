@@ -68,6 +68,10 @@ public class AppServerSocket
 		try {
 			int numero = Integer.parseInt(datoRec);
 			
+			if (numero < 1 || numero > 10) {
+                return "<server>¡Error! Te has salido del rango (debe ser entre 1 y 10)";
+            }
+			
 			if(numero > numGen) {
 				return "<server>El número es mayor que el número mágico";
 			}else if(numero < numGen) {
