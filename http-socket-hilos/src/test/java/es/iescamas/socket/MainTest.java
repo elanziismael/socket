@@ -18,7 +18,7 @@ class MainTest {
 
             int port = findFreePort();
 
-            SingleThreadedServer server = new SingleThreadedServer(port);
+            HiloPorClienteServidor server = new HiloPorClienteServidor(port);
             Thread serverThread = new Thread(server, "test-server-thread");
             serverThread.start();
 

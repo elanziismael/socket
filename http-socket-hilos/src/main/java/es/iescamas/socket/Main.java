@@ -13,7 +13,7 @@ public class Main {
 	
 	public static void main(String[] args) {
 		// Creamos el servidor indicando el puerto.
-		SingleThreadedServer server = new SingleThreadedServer(PORT);
+		HiloPorClienteServidor server = new HiloPorClienteServidor(PORT);
 		// Arrancamos el servidor en un hilo aparte.
 		new Thread(server, "Hilo-Servidor-principal").start();
 		

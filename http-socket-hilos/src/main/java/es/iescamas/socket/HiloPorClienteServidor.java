@@ -1,6 +1,9 @@
 package es.iescamas.socket;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -21,7 +24,7 @@ import java.util.Date;
  * - se usaría pool de hilos (ExecutorService) o I/O no bloqueante (NIO)
  * - se manejarían timeouts, parsing HTTP, cabeceras correctas, etc.
  */
-public class SingleThreadedServer implements Runnable {
+public class HiloPorClienteServidor implements Runnable {
 
     /**
      * Puerto donde escucha el servidor.
@@ -48,7 +51,7 @@ public class SingleThreadedServer implements Runnable {
      */
     protected Thread runningThread = null;
 
-    public SingleThreadedServer(int serverPort) {
+    public HiloPorClienteServidor(int serverPort) {
         this.serverPort = serverPort;
     }
 
@@ -81,7 +84,16 @@ public class SingleThreadedServer implements Runnable {
                 // Procesa la petición en ESTE MISMO hilo.
                 // Por eso este servidor es "single-thread": hasta que no termina,
                 // no atiende a otro cliente.
-                processClientRequest(clientSocket);
+                //processClientRequest(clientSocket);
+                
+                new Thread(() -> {
+                    try {
+                        processClientRequest(clientSocket);
+                    
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }, "client-" + clientSocket.getPort()).start();
 
             } catch (IOException e) {
                 // Caso típico: cuando llamas a stop(), cierras el ServerSocket.
@@ -103,35 +115,54 @@ public class SingleThreadedServer implements Runnable {
      * Procesa la conexión de un cliente.
      */
     private void processClientRequest(Socket clientSocket) throws IOException {
-    	 try (clientSocket;
-    	         OutputStream out = clientSocket.getOutputStream()) {
+        try (clientSocket;
+             InputStream in = clientSocket.getInputStream();
+             BufferedReader br = new BufferedReader(new InputStreamReader(in, StandardCharsets.US_ASCII));
+             OutputStream out = clientSocket.getOutputStream()) {
 
+            // 1) Leer la primera línea: "GET /ruta HTTP/1.1"
+            String requestLine = br.readLine(); // puede ser null si el cliente corta
+            String path = "/";
 
-    	        long time = System.currentTimeMillis();
-    	        String fecha = new SimpleDateFormat("dd/MM/yy HH:mm:ss").format(new Date(time));
-    	        
-    	        String body = "<html><body style='background-color: coral;'>"
-    	                + "<h3>Servidor OK</h3>"
-    	                + "<p>Server: " + fecha + "</p>"
-    	                + "</body></html>";
-    	        byte[] bodyBytes = body.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            if (requestLine != null && requestLine.startsWith("GET ")) {
+                // Extrae lo que hay entre "GET " y el siguiente espacio
+                int start = 4;
+                int end = requestLine.indexOf(' ', start);
+                if (end > start) path = requestLine.substring(start, end);
+            }
 
-    	        //HTTP--> CRLF + Content-Length + Content-Type
-    	        //https://es.wikipedia.org/wiki/CRLF
-    	        String headers =
-    	                "HTTP/1.1 200 OK\r\n" +
-    	                "Content-Type: text/html; charset=UTF-8\r\n" +
-    	                "Content-Length: " + bodyBytes.length + "\r\n" +
-    	                "Connection: close\r\n" +
-    	                "\r\n";
+            // (Opcional) Evitar “doble log” por favicon
+            boolean isFavicon = path.equals("/favicon.ico");
 
-    	        out.write(headers.getBytes(StandardCharsets.US_ASCII));
-    	        out.write(bodyBytes);
-    	        out.flush();
+            long time = System.currentTimeMillis();
+            String fecha = new SimpleDateFormat("dd/MM/yy HH:mm:ss").format(new Date(time));
 
-    	        System.out.println("Petición procesada: " + fecha);
-    	    }
+            String body = "<html><body style='background-color: coral;'>"
+                    + "<h3>Servidor OK</h3>"
+                    + "<p>Path: " + path + "</p>"
+                    + "<p>Server: " + fecha + "</p>"
+                    + "</body></html>";
+
+            byte[] bodyBytes = body.getBytes(StandardCharsets.UTF_8);
+
+            String headers =
+                    "HTTP/1.1 200 OK\r\n" +
+                    "Content-Type: text/html; charset=UTF-8\r\n" +
+                    "Content-Length: " + bodyBytes.length + "\r\n" +
+                    "Connection: close\r\n" +
+                    "\r\n";
+
+            out.write(headers.getBytes(StandardCharsets.US_ASCII));
+            out.write(bodyBytes);
+            out.flush();
+
+            if (!isFavicon) {
+                System.out.println("[" + Thread.currentThread().getName() + "] " + requestLine);
+                System.out.println("[" + Thread.currentThread().getName() + "] Petición procesada: " + fecha);
+            }
+        }
     }
+
 
     /**
      * Devuelve si el servidor está parado.

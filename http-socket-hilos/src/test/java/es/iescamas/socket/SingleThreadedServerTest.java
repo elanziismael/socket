@@ -15,13 +15,13 @@ import java.time.Duration;
 class SingleThreadedServerTest {
 
     private int port;
-    private SingleThreadedServer server;
+    private HiloPorClienteServidor server;
     private Thread serverThread;
 
     @BeforeEach
     void setUp() throws IOException {
         port = findFreePort();
-        server = new SingleThreadedServer(port);
+        server = new HiloPorClienteServidor(port);
         serverThread = new Thread(server, "server-test-thread");
     }
 
