@@ -82,7 +82,8 @@ public class HiloPorClienteServidor implements Runnable {
             if (requestLine.startsWith("GET ")) {
                 int start = 4;
                 int end = requestLine.indexOf(' ', start);
-                if (end > start) path = requestLine.substring(start, end);
+                if (end > start) 
+                	path = requestLine.substring(start, end);
             }
 
             // 2) Favicon: servir el fichero real desde resources y salir
