@@ -91,6 +91,16 @@ public class HiloPorClienteServidor implements Runnable {
                 serveFavicon(out);
                 return;
             }
+            
+            String saludo = "Servidor OK";
+            if (path.startsWith("/nombre/")) {
+                // Extraemos lo que hay después de "/nombre/"
+                // path.substring(8) corta los primeros 8 caracteres: "/nombre/"
+                String nombreExtraido = path.substring(8); 
+                if (!nombreExtraido.isBlank()) {
+                    saludo = "Hola " + nombreExtraido;
+                }
+            }
 
             // 3) Datos del cliente
             String clientIp = clientSocket.getInetAddress().getHostAddress();
@@ -106,7 +116,7 @@ public class HiloPorClienteServidor implements Runnable {
                     + "<title>Programación de Servicios y Procesos</title>"
                     + "</head>"
                     + "<body style='background-color: coral;'>"
-                    + "<h3 style='color:blue;'>Servidor OK</h3>"
+                    + "<h1 style='color:blue;'>" + saludo + "</h1>" 
                     + "<p>Path: " + path + "</p>"
                     + "<p>Server: " + fecha + "</p>"
                     + "<p>Hilo: " + Thread.currentThread().getName() + "</p>"

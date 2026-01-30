@@ -7,9 +7,9 @@ package es.iescamas.socket;
 public class Main {
 		
 	//Puerto donde escucha el servidor
-	final static int PORT = 9090;
+	final static int PORT = 9001;
 	//Tiempo
-	final static int TIME = 60; // 1 minuto
+	final static int TIME = 260; // 1 minuto
 	
 	public static void main(String[] args) {
 		// Creamos el servidor indicando el puerto.
