@@ -2,7 +2,7 @@ package es.iescamas.socket;
 
 public class Main {
 
-    final static int PORT = 9001;
+    final static int PORT = 9002;
     final static int TIME = 600; 
     
     public static void main(String[] args) {
